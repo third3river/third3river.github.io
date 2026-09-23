@@ -1,4 +1,4 @@
-name: Deploy Hugo site to Pages
+name: Deploy Hugo site to GitHub Pages
 
 on:
   push:
@@ -15,9 +15,16 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      HUGO_ENVIRONMENT: production
+      HUGO_ENV: production
 
     steps:
       - name: Checkout
@@ -26,22 +33,20 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Setup Hugo
+      - name: Install Hugo
         uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: latest
           extended: true
 
-      - name: Setup Pages
+      - name: Configure GitHub Pages
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Build website
-        env:
-          HUGO_ENVIRONMENT: production
-        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Build site
+        run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
 
-      - name: Upload website
+      - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
@@ -55,6 +60,6 @@ jobs:
     needs: build
 
     steps:
-      - name: Deploy website
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
